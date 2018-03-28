@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import org.mongojack.internal.FetchableDBRef;
 import org.mongojack.internal.JacksonCollectionKey;
@@ -114,6 +115,7 @@ public class JacksonDBCollection<T, K> {
     private final IdHandler<K, Object> idHandler;
     private final JacksonDecoderFactory<T> decoderFactory;
     private final Map<Feature, Boolean> features;
+    private long cursorMaxTimeMs = 0L;
 
     /**
      * Cache of referenced collections
@@ -253,6 +255,19 @@ public class JacksonDBCollection<T, K> {
         MongoJackModule.configure(objectMapper);
         return new JacksonDBCollection<T, K>(dbCollection, objectMapper.constructType(type),
                                              objectMapper.constructType(keyType), objectMapper, view, null);
+    }
+
+    /**
+     * Enables the maxTimeMs flag on cursor operations
+     */
+    public void setCursorMaxTimeMs(long maxTimeMs)
+    {
+        this.cursorMaxTimeMs = maxTimeMs;
+    }
+
+    public long getCursorMaxTimeMs()
+    {
+        return cursorMaxTimeMs;
     }
 
     /**
@@ -811,7 +826,7 @@ public class JacksonDBCollection<T, K> {
             boolean remove, DBObject update, boolean returnNew, boolean upsert) {
         return convertFromDbObject(dbCollection.findAndModify(
                 serializeFields(query), fields, sort, remove, update,
-                returnNew, upsert));
+                returnNew, upsert, cursorMaxTimeMs, TimeUnit.MILLISECONDS));
     }
 
     /**
@@ -838,7 +853,8 @@ public class JacksonDBCollection<T, K> {
             boolean remove, T update, boolean returnNew, boolean upsert) {
         return convertFromDbObject(dbCollection.findAndModify(
                 serializeFields(query), fields, sort, remove,
-                convertToBasicDbObject(update), returnNew, upsert));
+                convertToBasicDbObject(update), returnNew, upsert,
+                cursorMaxTimeMs, TimeUnit.MILLISECONDS));
     }
 
     /**
@@ -865,7 +881,8 @@ public class JacksonDBCollection<T, K> {
             boolean remove, T update, boolean returnNew, boolean upsert) {
         return convertFromDbObject(dbCollection.findAndModify(
                 serializeQuery(query), fields, sort, remove,
-                convertToBasicDbObject(update), returnNew, upsert));
+                convertToBasicDbObject(update), returnNew, upsert,
+                cursorMaxTimeMs, TimeUnit.MILLISECONDS));
     }
 
     /**
@@ -893,7 +910,8 @@ public class JacksonDBCollection<T, K> {
             boolean upsert) {
         return convertFromDbObject(dbCollection.findAndModify(
                 serializeQuery(query), fields, sort, remove,
-                update.serialiseAndGet(objectMapper, type), returnNew, upsert));
+                update.serialiseAndGet(objectMapper, type), returnNew, upsert,
+                cursorMaxTimeMs, TimeUnit.MILLISECONDS));
     }
 
     /**
@@ -921,7 +939,8 @@ public class JacksonDBCollection<T, K> {
             boolean upsert) {
         return convertFromDbObject(dbCollection.findAndModify(
                 serializeFields(query), fields, sort, remove,
-                update.serialiseAndGet(objectMapper, type), returnNew, upsert));
+                update.serialiseAndGet(objectMapper, type), returnNew, upsert,
+                cursorMaxTimeMs, TimeUnit.MILLISECONDS));
     }
 
     /**

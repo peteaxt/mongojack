@@ -20,6 +20,7 @@ import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.mongojack.internal.query.QueryCondition;
 
@@ -85,6 +86,8 @@ public class DBCursor<T> extends DBQuery.AbstractBuilder<DBCursor<T>> implements
             this.cursor.setDecoderFactory(jacksonDBCollection
                     .getDecoderFactory());
         }
+        //Default of zero means no limit
+        this.cursor.maxTime(jacksonDBCollection.getCursorMaxTimeMs(), TimeUnit.MILLISECONDS);
     }
 
     /**
